@@ -22,7 +22,6 @@ pub fn measure_time(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let attr_args = parse_macro_input!(metadata as syn::AttributeArgs);
-    let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
     let args: MacroArgs = match MacroArgs::from_list(&attr_args) {
         Ok(v) => v,
         Err(e) => {
@@ -30,20 +29,22 @@ pub fn measure_time(
         }
     };
 
-    let visibility = input_fn.vis;
-    let ident = input_fn.ident;
-    let inputs = input_fn.decl.inputs;
-    let output = input_fn.decl.output;
-    let block = input_fn.block;
-    let mut print_str = "".to_string();
-    if let Some(pre) = args.prefix {
-        print_str.push_str(&format!("{}::", pre));
-    }
-    print_str.push_str(&ident.to_string());
-    if let Some(suffix) = args.suffix {
-        print_str.push_str(&format!("::{}", suffix));
-    }
     if args.print.unwrap_or(true) {
+        let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
+        let visibility = input_fn.vis;
+        let ident = input_fn.ident;
+        let inputs = input_fn.decl.inputs;
+        let output = input_fn.decl.output;
+        let block = input_fn.block;
+        let mut print_str = "".to_string();
+        if let Some(pre) = args.prefix {
+            print_str.push_str(&format!("{}::", pre));
+        }
+        print_str.push_str(&ident.to_string());
+        if let Some(suffix) = args.suffix {
+            print_str.push_str(&format!("::{}", suffix));
+        }
+
         (quote!(
             #visibility fn #ident(#inputs) #output {
                 let start_time = std::time::Instant::now();
@@ -56,7 +57,6 @@ pub fn measure_time(
         ))
         .into()
     } else {
-        quote!(input).into()
+        proc_macro::TokenStream::from(input).into()
     }
 }
-
