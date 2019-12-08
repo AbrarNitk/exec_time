@@ -9,7 +9,7 @@ use darling::FromMeta;
 #[derive(Debug, FromMeta)]
 struct MacroArgs {
     #[darling(default)]
-    print: Option<bool>,
+    print: Option<String>,
     #[darling(default)]
     prefix: Option<String>,
     #[darling(default)]
@@ -29,7 +29,11 @@ pub fn measure_time(
         }
     };
 
-    if args.print.unwrap_or(true) {
+    let print_arg = args.print.unwrap_or("always".to_string());
+
+    if print_arg.eq(&"always".to_string())
+        || (print_arg.eq(&"debug".to_string()) && cfg!(debug_assertions))
+    {
         let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
         let visibility = input_fn.vis;
         let ident = input_fn.ident;
