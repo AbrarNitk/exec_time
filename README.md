@@ -3,16 +3,17 @@
 
 #### Usage
 ```toml
-measure_time = "0.1.0"
+[dependencies]
+exec_time = "0.1.0"
 ```
 
 ## Examples
 
 ```rust
 #[macro_use]
-extern crate measure_time;
+extern crate exec_time;
 
-#[measure_time(print = "always", prefix = "user/lib", suffix="route")]
+#[exec_time(print = "always", prefix = "user/lib", suffix="route")]
 fn login() {
     std::thread::sleep(std::time::Duration::from_millis(100));
 }
@@ -25,7 +26,7 @@ fn main() {
 
 ```text
 running 1 test
-Time user/lib::login::test_module: 103 mills
+Time user/lib::login::test_module: 102 mills
 test tests::execution_time ... ok
 ```
 
