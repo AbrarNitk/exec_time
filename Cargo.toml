@@ -1,5 +1,5 @@
 [package]
-name = "measure_time"
+name = "exec_time"
 version = "0.1.0"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,7 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml"]
 readme = "README.md"
 keywords = ["execution_time", "print_time", "measure_time", "time"]
-repository = "https://github.com/AbrarNitk/measure_time"
+repository = "https://github.com/AbrarNitk/exec_time"
 
 
 [lib]

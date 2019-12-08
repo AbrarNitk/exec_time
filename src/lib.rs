@@ -17,7 +17,7 @@ struct MacroArgs {
 }
 
 #[proc_macro_attribute]
-pub fn measure_time(
+pub fn exec_time(
     metadata: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
