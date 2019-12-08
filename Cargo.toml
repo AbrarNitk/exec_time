@@ -1,6 +1,6 @@
 [package]
 name = "exec_time"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
 description = "Print execution time of a function"
