@@ -3,6 +3,14 @@ name = "measure_time"
 version = "0.1.0"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
+description = "Print execution time of a function"
+license = "MIT"
+include = ["src/**/*", "Cargo.toml"]
+readme = "README.md"
+keywords = ["execution_time", "print_time", "measure_time", "time"]
+repository = "https://github.com/AbrarNitk/measure_time"
+
+
 [lib]
 proc-macro = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
