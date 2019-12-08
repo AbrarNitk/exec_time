@@ -4,7 +4,7 @@
 #### Usage
 ```toml
 [dependencies]
-exec_time = "0.1.0"
+exec_time = "0.1.1"
 ```
 
 ## Examples
