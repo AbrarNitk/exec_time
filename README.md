@@ -25,9 +25,7 @@ fn main() {
 
 
 ```text
-running 1 test
 Time user/lib::login::test_module: 102 mills
-test tests::execution_time ... ok
 ```
 
 Here `print`, `prefix` and `suffix` all are optional field. Default value of print is `always`.
