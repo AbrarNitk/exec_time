@@ -4,7 +4,7 @@
 #### Usage
 ```toml
 [dependencies]
-exec_time = "0.1.1"
+exec_time = "0.1.2"
 ```
 
 ## Examples
@@ -25,7 +25,7 @@ fn main() {
 
 
 ```text
-Time user/lib::login::test_module: 102 mills
+Time user/lib::login::route: 102 mills
 ```
 
 Here `print`, `prefix` and `suffix` all are optional field. Default value of print is `always`.
