@@ -39,8 +39,8 @@ pub fn exec_time(
         let ident = input_fn.ident;
         let inputs = input_fn.decl.inputs;
         let output = input_fn.decl.output;
-        let generics = input_fn.decl.generics.clone();
-        let where_clause = input_fn.decl.generics.where_clause;
+        let generics = &input_fn.decl.generics;
+        let where_clause = &input_fn.decl.generics.where_clause;
         let block = input_fn.block;
         let mut print_str = "".to_string();
         if let Some(pre) = args.prefix {
@@ -54,10 +54,9 @@ pub fn exec_time(
         (quote!(
             #visibility fn #ident #generics (#inputs) #output #where_clause {
                 let start_time = std::time::Instant::now();
-                let r = || { #block };
-                let r = r();
-                let total_time = std::time::Instant::now() - start_time;
-                println!("Time {}: {} mills", #print_str, total_time.as_millis());
+                let f = || { #block };
+                let r = f();
+                println!("Time {}: {} mills", #print_str, (std::time::Instant::now() - start_time).as_millis());
                 r
             }
         ))
