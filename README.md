@@ -8,7 +8,7 @@
 #### Usage
 ```toml
 [dependencies]
-exec_time = "0.1.3"
+exec_time = "0.1.4"
 ```
 
 ## Examples
@@ -76,7 +76,7 @@ fn main() {
 ```text
 ```
 
-#### Example 3
+#### Example 4
 It will print, prefix and suffix with function name.
 
 ```rust
