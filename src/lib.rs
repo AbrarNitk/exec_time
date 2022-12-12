@@ -52,8 +52,20 @@ pub fn exec_time(
             print_str.push_str(&format!("::{}", suffix));
         }
 
-        (quote!(
+        if asyncness.is_some() {
+            (quote!(
             #visibility #asyncness fn #ident #generics (#inputs) #output #where_clause {
+                let start_time = std::time::Instant::now();
+                let f = || async { #block };
+                let r = f().await;
+                println!("Time {}: {} mills", #print_str, (std::time::Instant::now() - start_time).as_millis());
+                r
+            }
+        ))
+                .into()
+        } else {
+            (quote!(
+            #visibility fn #ident #generics (#inputs) #output #where_clause {
                 let start_time = std::time::Instant::now();
                 let f = || { #block };
                 let r = f();
@@ -61,7 +73,8 @@ pub fn exec_time(
                 r
             }
         ))
-        .into()
+                .into()
+        }
     } else {
         proc_macro::TokenStream::from(input).into()
     }
