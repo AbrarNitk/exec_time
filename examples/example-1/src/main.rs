@@ -1,13 +1,17 @@
 
 
+#[exec_time::exec_time]
 async fn foo() {
-    let f = || async {""};
+    let f = || async {"hello"};
     let fr = f().await;
     println!("{}", fr)
 }
 
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    use tokio::spawn;
     println!("Hello, world!");
-    async {foo().await};
+    foo().await;
 }
+

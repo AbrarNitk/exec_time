@@ -1,10 +1,9 @@
 [package]
-name = "example-1"
+name = "example-2"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-exec_time = {git = "https://github.com/AbrarNitk/exec_time", rev = "f6a2777ce4d90884cc7d5680a9cd621f7c5e0b9b" }
 tokio = {version = "1.23.0", features = ["full"]}
