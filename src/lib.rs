@@ -36,12 +36,13 @@ pub fn exec_time(
     {
         let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
         let visibility = input_fn.vis;
-        let ident = input_fn.ident;
-        let inputs = input_fn.decl.inputs;
-        let output = input_fn.decl.output;
-        let generics = &input_fn.decl.generics;
-        let where_clause = &input_fn.decl.generics.where_clause;
+        let ident = input_fn.sig.ident;
+        let inputs = input_fn.sig.inputs;
+        let output = input_fn.sig.output;
+        let generics = &input_fn.sig.generics;
+        let where_clause = &input_fn.sig.generics.where_clause;
         let block = input_fn.block;
+        let asyncness = input_fn.sig.asyncness;
         let mut print_str = "".to_string();
         if let Some(pre) = args.prefix {
             print_str.push_str(&format!("{}::", pre));
@@ -52,7 +53,7 @@ pub fn exec_time(
         }
 
         (quote!(
-            #visibility fn #ident #generics (#inputs) #output #where_clause {
+            #visibility #asyncness fn #ident #generics (#inputs) #output #where_clause {
                 let start_time = std::time::Instant::now();
                 let f = || { #block };
                 let r = f();
