@@ -69,7 +69,7 @@ pub fn exec_time(
                 let start_time = std::time::Instant::now();
                 let f = || { #block };
                 let r = f();
-                println!("Time {}: {} mills", #print_str, (std::time::Instant::now() - start_time).as_millis());
+                println!("Time {}: {} mills", #print_str, start_time.elapsed());
                 r
             }
         ))
