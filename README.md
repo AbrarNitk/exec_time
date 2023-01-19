@@ -1,4 +1,4 @@
-# Time measure for Rust functions
+# Time Measure for Rust Functions
 ### It will simply print execution time of a function
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
