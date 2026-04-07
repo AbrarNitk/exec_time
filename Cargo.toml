@@ -1,8 +1,9 @@
 [package]
 name = "exec_time"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
+rust-version = "1.88"
 description = "Print execution time of a function"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml"]
@@ -16,10 +17,7 @@ proc-macro = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-quote = "1.0.21"
-proc-macro2 = "1.0.47"
-darling = "0.14.2"
-
-[dependencies.syn]
-version = "1.0.105"
-features = ["full"]
+quote = "1.0"
+proc-macro2 = "1.0"
+darling = "0.23"
+syn = "2.0"

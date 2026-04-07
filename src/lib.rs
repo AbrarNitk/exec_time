@@ -7,6 +7,7 @@ extern crate proc_macro;
 use darling::FromMeta;
 
 #[derive(Debug, FromMeta)]
+#[darling(derive_syn_parse)]
 struct MacroArgs {
     #[darling(default)]
     print: Option<String>,
@@ -21,11 +22,10 @@ pub fn exec_time(
     metadata: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let attr_args = parse_macro_input!(metadata as syn::AttributeArgs);
-    let args: MacroArgs = match MacroArgs::from_list(&attr_args) {
+    let args: MacroArgs = match syn::parse(metadata) {
         Ok(v) => v,
         Err(e) => {
-            return e.write_errors().into();
+            return e.to_compile_error().into();
         }
     };
 
@@ -54,26 +54,26 @@ pub fn exec_time(
 
         if asyncness.is_some() {
             (quote!(
-            #visibility #asyncness fn #ident #generics (#inputs) #output #where_clause {
-                let start_time = std::time::Instant::now();
-                let f = || async { #block };
-                let r = f().await;
-                println!("Time {}: {} mills", #print_str, (std::time::Instant::now() - start_time).as_millis());
-                r
-            }
-        ))
-                .into()
+                #visibility #asyncness fn #ident #generics (#inputs) #output #where_clause {
+                    let start_time = std::time::Instant::now();
+                    let f = || async { #block };
+                    let r = f().await;
+                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
+                    r
+                }
+            ))
+            .into()
         } else {
             (quote!(
-            #visibility fn #ident #generics (#inputs) #output #where_clause {
-                let start_time = std::time::Instant::now();
-                let f = || { #block };
-                let r = f();
-                println!("Time {}: {} mills", #print_str, start_time.elapsed());
-                r
-            }
-        ))
-                .into()
+                #visibility fn #ident #generics (#inputs) #output #where_clause {
+                    let start_time = std::time::Instant::now();
+                    let f = || { #block };
+                    let r = f();
+                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
+                    r
+                }
+            ))
+            .into()
         }
     } else {
         proc_macro::TokenStream::from(input).into()

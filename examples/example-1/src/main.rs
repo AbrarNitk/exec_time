@@ -1,12 +1,9 @@
-
-
 #[exec_time::exec_time]
 async fn foo() {
-    let f = || async {"hello"};
+    let f = || async { "hello" };
     let fr = f().await;
     println!("{}", fr)
 }
-
 
 #[tokio::main]
 async fn main() {
@@ -14,4 +11,3 @@ async fn main() {
     println!("Hello, world!");
     foo().await;
 }
-
