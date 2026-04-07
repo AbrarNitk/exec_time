@@ -37,9 +37,11 @@ fn tracing_backend_emits_events() {
     assert!(stdout.contains("worker.slow took "));
     assert!(stdout.contains("worker.warn took "));
     assert!(!stdout.contains("worker.suppressed took "));
+    assert!(stdout.contains("[exec_time] worker.stdout took "));
     assert!(stdout.contains("trace-result=1"));
     assert!(stdout.contains("debug-result=2"));
     assert!(stdout.contains("slow-result=3"));
     assert!(stdout.contains("suppressed-result=4"));
     assert!(stdout.contains("warn-result=5"));
+    assert!(stdout.contains("stdout-result=6"));
 }

@@ -33,27 +33,32 @@ fn block_on<F: Future>(future: F) -> F::Output {
     }
 }
 
-#[exec_time(print = "never", backend = "tracing", level = "debug")]
-fn sync_tracing_backend(value: i32) -> i32 {
+#[exec_time(print = "never", level = "debug")]
+fn sync_auto_tracing_backend(value: i32) -> i32 {
     value + 1
 }
 
-#[exec_time(
-    print = "never",
-    backend = "tracing",
-    name = "async.work",
-    level = "trace"
-)]
-async fn async_tracing_backend(value: i32) -> i32 {
+#[exec_time(print = "never", name = "async.work", level = "trace")]
+async fn async_auto_tracing_backend(value: i32) -> i32 {
+    value + 1
+}
+
+#[exec_time(print = "never", backend = "stdout", name = "sync.stdout")]
+fn sync_explicit_stdout_backend(value: i32) -> i32 {
     value + 1
 }
 
 #[test]
-fn sync_function_accepts_tracing_backend_arguments() {
-    assert_eq!(sync_tracing_backend(41), 42);
+fn sync_function_defaults_to_auto_backend_when_tracing_is_enabled() {
+    assert_eq!(sync_auto_tracing_backend(41), 42);
 }
 
 #[test]
-fn async_function_accepts_tracing_backend_arguments() {
-    assert_eq!(block_on(async_tracing_backend(41)), 42);
+fn async_function_defaults_to_auto_backend_when_tracing_is_enabled() {
+    assert_eq!(block_on(async_auto_tracing_backend(41)), 42);
+}
+
+#[test]
+fn sync_function_can_override_auto_backend_with_stdout() {
+    assert_eq!(sync_explicit_stdout_backend(41), 42);
 }

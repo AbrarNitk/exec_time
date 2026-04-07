@@ -6,9 +6,9 @@ use darling::{Error, FromMeta};
 use proc_macro2::TokenStream as TokenStream2;
 use std::time::Duration;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 enum OutputBackend {
-    #[default]
+    Auto,
     Stdout,
     Tracing,
 }
@@ -16,10 +16,17 @@ enum OutputBackend {
 impl FromMeta for OutputBackend {
     fn from_string(value: &str) -> darling::Result<Self> {
         match value {
+            "auto" => Ok(Self::Auto),
             "stdout" => Ok(Self::Stdout),
             "tracing" => Ok(Self::Tracing),
             _ => Err(Error::unknown_value(value)),
         }
+    }
+}
+
+impl Default for OutputBackend {
+    fn default() -> Self {
+        Self::Auto
     }
 }
 
@@ -230,13 +237,31 @@ fn emit_statement(
 fn backend_emit_statement(
     label: &str,
     backend: OutputBackend,
-    level: EventLevel,
+    _level: EventLevel,
     unit: TimeUnit,
-    warn: bool,
+    _warn: bool,
 ) -> TokenStream2 {
     match backend {
-        OutputBackend::Stdout => stdout_emit_statement(label, unit, warn),
-        OutputBackend::Tracing => tracing_emit_statement(label, level, unit),
+        OutputBackend::Auto => auto_backend_emit_statement(label, _level, unit, _warn),
+        OutputBackend::Stdout => stdout_emit_statement(label, unit, _warn),
+        OutputBackend::Tracing => tracing_emit_statement(label, _level, unit),
+    }
+}
+
+fn auto_backend_emit_statement(
+    label: &str,
+    _level: EventLevel,
+    unit: TimeUnit,
+    _warn: bool,
+) -> TokenStream2 {
+    #[cfg(feature = "tracing")]
+    {
+        tracing_emit_statement(label, _level, unit)
+    }
+
+    #[cfg(not(feature = "tracing"))]
+    {
+        stdout_emit_statement(label, unit, _warn)
     }
 }
 
