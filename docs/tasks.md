@@ -42,11 +42,12 @@ Rust observability tooling, and stay simple for small projects.
 
 ### Phase 2: Improve Output Usability
 
-- [ ] Add configurable output units such as `ns`, `us`, `ms`, and `s`.
-- [ ] Add a `name` option so users can override the default function-based label.
-- [ ] Improve default message formatting to be more readable and consistent.
-- [ ] Consider adding a compact output mode for command-line tools.
-- [ ] Ensure sync and async macros format timing output the same way.
+- [x] Add configurable output units such as `ns`, `us`, `ms`, and `s`.
+- [x] Add a `name` option so users can override the default function-based label.
+- [x] Improve default message formatting to be more readable and consistent.
+- [x] Consider adding a compact output mode for command-line tools.
+- [x] Ensure sync and async macros format timing output the same way.
+
 
 ### Phase 3: Reduce Noise
 
@@ -54,6 +55,7 @@ Rust observability tooling, and stay simple for small projects.
 - [ ] Add `min_duration` support to suppress very small timings.
 - [ ] Allow developers to choose behavior when below threshold: skip, debug log, or trace log.
 - [ ] Define clear precedence rules when `print`, thresholds, and backend settings are combined.
+
 
 ### Phase 4: Support Real Logging Backends
 

@@ -2,9 +2,29 @@
 extern crate quote;
 #[macro_use]
 extern crate syn;
-extern crate darling;
-extern crate proc_macro;
-use darling::FromMeta;
+use darling::{Error, FromMeta};
+use proc_macro2::TokenStream as TokenStream2;
+
+#[derive(Clone, Copy, Debug, Default)]
+enum TimeUnit {
+    Ns,
+    Us,
+    #[default]
+    Ms,
+    S,
+}
+
+impl FromMeta for TimeUnit {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        match value {
+            "ns" => Ok(Self::Ns),
+            "us" => Ok(Self::Us),
+            "ms" => Ok(Self::Ms),
+            "s" => Ok(Self::S),
+            _ => Err(Error::unknown_value(value)),
+        }
+    }
+}
 
 #[derive(Debug, FromMeta)]
 #[darling(derive_syn_parse)]
@@ -15,6 +35,10 @@ struct MacroArgs {
     prefix: Option<String>,
     #[darling(default)]
     suffix: Option<String>,
+    #[darling(default)]
+    name: Option<String>,
+    #[darling(default)]
+    unit: Option<TimeUnit>,
 }
 
 #[proc_macro_attribute]
@@ -29,11 +53,9 @@ pub fn exec_time(
         }
     };
 
-    let print_arg = args.print.unwrap_or("always".to_string());
+    let print_arg = args.print.as_deref().unwrap_or("always");
 
-    if print_arg.eq(&"always".to_string())
-        || (print_arg.eq(&"debug".to_string()) && cfg!(debug_assertions))
-    {
+    if print_arg == "always" || (print_arg == "debug" && cfg!(debug_assertions)) {
         let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
         let visibility = input_fn.vis;
         let ident = input_fn.sig.ident;
@@ -43,14 +65,8 @@ pub fn exec_time(
         let where_clause = &input_fn.sig.generics.where_clause;
         let block = input_fn.block;
         let asyncness = input_fn.sig.asyncness;
-        let mut print_str = "".to_string();
-        if let Some(pre) = args.prefix {
-            print_str.push_str(&format!("{}::", pre));
-        }
-        print_str.push_str(&ident.to_string());
-        if let Some(suffix) = args.suffix {
-            print_str.push_str(&format!("::{}", suffix));
-        }
+        let label = build_label(&ident, &args);
+        let print_stmt = print_statement(&label, args.unit.unwrap_or_default());
 
         if asyncness.is_some() {
             (quote!(
@@ -58,7 +74,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || async { #block };
                     let r = f().await;
-                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
+                    #print_stmt
                     r
                 }
             ))
@@ -69,7 +85,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || { #block };
                     let r = f();
-                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
+                    #print_stmt
                     r
                 }
             ))
@@ -77,5 +93,41 @@ pub fn exec_time(
         }
     } else {
         proc_macro::TokenStream::from(input).into()
+    }
+}
+
+fn build_label(ident: &syn::Ident, args: &MacroArgs) -> String {
+    if let Some(name) = &args.name {
+        return name.clone();
+    }
+
+    let mut label = String::new();
+    if let Some(prefix) = &args.prefix {
+        label.push_str(prefix);
+        label.push_str("::");
+    }
+    label.push_str(&ident.to_string());
+    if let Some(suffix) = &args.suffix {
+        label.push_str("::");
+        label.push_str(suffix);
+    }
+
+    label
+}
+
+fn print_statement(label: &str, unit: TimeUnit) -> TokenStream2 {
+    match unit {
+        TimeUnit::Ns => quote! {
+            println!("[exec_time] {} took {} ns", #label, start_time.elapsed().as_nanos());
+        },
+        TimeUnit::Us => quote! {
+            println!("[exec_time] {} took {} us", #label, start_time.elapsed().as_micros());
+        },
+        TimeUnit::Ms => quote! {
+            println!("[exec_time] {} took {} ms", #label, start_time.elapsed().as_millis());
+        },
+        TimeUnit::S => quote! {
+            println!("[exec_time] {} took {:.3} s", #label, start_time.elapsed().as_secs_f64());
+        },
     }
 }

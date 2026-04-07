@@ -15,6 +15,11 @@ fn sum_slice(values: &[i32]) -> i32 {
     values.iter().sum()
 }
 
+#[exec_time(print = "never", name = "math.sum", unit = "us")]
+fn sum_slice_with_name(values: &[i32]) -> i32 {
+    values.iter().sum()
+}
+
 #[exec_time(print = "never")]
 fn first_owned<T>(mut values: Vec<T>) -> T
 where
@@ -56,6 +61,11 @@ fn sync_function_with_empty_attribute_arguments_still_runs() {
 #[test]
 fn sync_function_accepts_prefix_and_suffix_arguments() {
     assert_eq!(sum_slice(&[10, 20, 12]), 42);
+}
+
+#[test]
+fn sync_function_accepts_name_and_unit_arguments() {
+    assert_eq!(sum_slice_with_name(&[10, 20, 12]), 42);
 }
 
 #[test]

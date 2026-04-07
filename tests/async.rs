@@ -47,6 +47,11 @@ async fn sum_slice_async(values: &[i32]) -> i32 {
     values.iter().sum()
 }
 
+#[exec_time(print = "never", name = "math.sum", unit = "us")]
+async fn sum_slice_with_name_async(values: &[i32]) -> i32 {
+    values.iter().sum()
+}
+
 #[exec_time(print = "never")]
 async fn first_owned_async<T>(mut values: Vec<T>) -> T
 where
@@ -88,6 +93,11 @@ fn async_function_with_empty_attribute_arguments_still_runs() {
 #[test]
 fn async_function_accepts_prefix_and_suffix_arguments() {
     assert_eq!(block_on(sum_slice_async(&[10, 20, 12])), 42);
+}
+
+#[test]
+fn async_function_accepts_name_and_unit_arguments() {
+    assert_eq!(block_on(sum_slice_with_name_async(&[10, 20, 12])), 42);
 }
 
 #[test]

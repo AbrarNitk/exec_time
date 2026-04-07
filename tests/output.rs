@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
-fn impl_method_prints_timing_with_ms_wording() {
+fn impl_method_prints_readable_timing_output() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let fixture_manifest = manifest_dir.join("tests/fixtures/impl_stdout/Cargo.toml");
     let target_dir = manifest_dir.join("target/test-fixtures/impl-stdout");
@@ -27,8 +27,11 @@ fn impl_method_prints_timing_with_ms_wording() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
 
-    assert!(stdout.contains("Time run: "));
+    assert!(stdout.contains("[exec_time] run took "));
     assert!(stdout.contains(" ms"));
     assert!(!stdout.contains("mills"));
     assert!(stdout.contains("result=42"));
+    assert!(stdout.contains("[exec_time] worker.job took "));
+    assert!(stdout.contains(" us"));
+    assert!(stdout.contains("named-result=7"));
 }

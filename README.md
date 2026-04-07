@@ -10,7 +10,7 @@ Attribute macro for printing function execution time.
 
 ```toml
 [dependencies]
-exec_time = "0.1.4"
+exec_time = "0.1.5"
 ```
 
 MSRV: Rust `1.88`.
@@ -31,7 +31,7 @@ fn main() {
 ```
 
 ```text
-Time login: 102 ms
+[exec_time] login took 102 ms
 ```
 
 ## Options
@@ -39,6 +39,8 @@ Time login: 102 ms
 - `print = "always"`: print in all builds. Default.
 - `print = "debug"`: print only in debug builds.
 - `print = "never"`: disable printing.
+- `name = "..."`: override the default function-based label. Takes precedence over `prefix` and `suffix`.
+- `unit = "ns" | "us" | "ms" | "s"`: choose the reported time unit. Default: `ms`.
 - `prefix = "..."`: prepend a label before the function name.
 - `suffix = "..."`: append a label after the function name.
 
@@ -47,12 +49,12 @@ Time login: 102 ms
 ```rust
 use exec_time::exec_time;
 
-#[exec_time(prefix = "user/lib", suffix = "route")]
+#[exec_time(name = "user.login", unit = "us")]
 fn login() {
     std::thread::sleep(std::time::Duration::from_millis(100));
 }
 ```
 
 ```text
-Time user/lib::login::route: 102 ms
+[exec_time] user.login took 102345 us
 ```
