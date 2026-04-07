@@ -42,18 +42,20 @@ Rust observability tooling, and stay simple for small projects.
 
 ### Phase 2: Improve Output Usability
 
-- [ ] Add configurable output units such as `ns`, `us`, `ms`, and `s`.
-- [ ] Add a `name` option so users can override the default function-based label.
-- [ ] Improve default message formatting to be more readable and consistent.
-- [ ] Consider adding a compact output mode for command-line tools.
-- [ ] Ensure sync and async macros format timing output the same way.
+- [x] Add configurable output units such as `ns`, `us`, `ms`, and `s`.
+- [x] Add a `name` option so users can override the default function-based label.
+- [x] Improve default message formatting to be more readable and consistent.
+- [x] Consider adding a compact output mode for command-line tools.
+- [x] Ensure sync and async macros format timing output the same way.
+
 
 ### Phase 3: Reduce Noise
 
-- [ ] Add `warn_over` or `log_over` style thresholds so only slow calls are reported.
+- [x] Add `warn_over` or `log_over` style thresholds so only slow calls are reported.
 - [ ] Add `min_duration` support to suppress very small timings.
 - [ ] Allow developers to choose behavior when below threshold: skip, debug log, or trace log.
-- [ ] Define clear precedence rules when `print`, thresholds, and backend settings are combined.
+- [x] Define clear precedence rules when `print`, thresholds, and backend settings are combined.
+
 
 ### Phase 4: Support Real Logging Backends
 
@@ -71,7 +73,20 @@ Rust observability tooling, and stay simple for small projects.
 - [ ] Allow static labels or tags such as module name or operation name.
 - [ ] Document how this integrates with common metrics exporters.
 
-### Phase 6: Improve Macro API Design
+### Phase 6: Add Profiling-Oriented Instrumentation
+
+- [ ] Add `count_calls` support so developers can track how often a function runs.
+- [ ] Add aggregate stats such as call count, min, max, and average duration.
+- [ ] Add periodic summaries so developers can report every `N` calls or every `T` seconds instead of every invocation.
+- [ ] Evaluate approximate percentile reporting such as p50, p95, and p99 latency snapshots.
+- [ ] Add optional source context such as module path, file, and line.
+- [ ] Explore nested timing support so parent and child instrumented calls can be correlated.
+- [ ] Add sampling controls so hot functions can log only a subset of calls.
+- [ ] Add cold-start handling such as ignoring or separately reporting the first `N` calls.
+- [ ] Add return-status aware reporting for common result patterns such as `Result<T, E>`.
+- [ ] Document clearly that this crate is an instrumentation helper, not a full profiler.
+
+### Phase 7: Improve Macro API Design
 
 - [ ] Review existing options: `print`, `prefix`, and `suffix`.
 - [ ] Decide whether `prefix` and `suffix` should be replaced by a clearer `name` or `target` API.
@@ -80,7 +95,7 @@ Rust observability tooling, and stay simple for small projects.
 - [ ] Consider a `disabled` or feature-gated mode for release builds.
 - [ ] Keep attribute syntax short and readable for the common case.
 
-### Phase 7: Documentation and Developer Experience
+### Phase 8: Documentation and Developer Experience
 
 - [ ] Rewrite the README around developer use cases, not only printed output.
 - [ ] Add examples for sync, async, threshold-based logging, and tracing integration.
@@ -103,6 +118,12 @@ fn login() {}
 #[exec_time(print = "debug", min_duration = "5ms")]
 fn read_cache() {}
 
+#[exec_time(count_calls, summary_every = "100")]
+fn hot_path() {}
+
+#[exec_time(sample = "0.1", include_file = true, include_line = true)]
+fn parse_payload() {}
+
 #[exec_time(backend = "tracing", level = "info", warn_over = "100ms")]
 async fn fetch_user() {}
 
@@ -117,6 +138,7 @@ fn run_query() {}
 - Should duration arguments be strings like `"100ms"` or integer values with a separate `unit` option?
 - Should the crate stay intentionally lightweight, or should it grow into a small observability helper?
 - Should metrics support be first-party or left for a separate crate?
+- Which profiling-oriented features belong in this crate versus external tooling such as `tracing`, `metrics`, or system profilers?
 
 ## Suggested Implementation Order
 
@@ -125,5 +147,7 @@ fn run_query() {}
 3. Add threshold support to reduce noise.
 4. Add `tracing` integration.
 5. Add `log` integration.
-6. Evaluate whether metrics support belongs in this crate or a follow-up crate.
-7. Rewrite the README and publish a new release after the API settles.
+6. Add `min_duration` and sampling to reduce noise further.
+7. Add metrics support and evaluate which aggregate stats belong in this crate.
+8. Add profiling-oriented summaries and source-context features.
+9. Rewrite the README and publish a new release after the API settles.

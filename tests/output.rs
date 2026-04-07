@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
-fn impl_method_prints_timing_with_ms_wording() {
+fn impl_method_prints_readable_timing_output() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let fixture_manifest = manifest_dir.join("tests/fixtures/impl_stdout/Cargo.toml");
     let target_dir = manifest_dir.join("target/test-fixtures/impl-stdout");
@@ -26,9 +26,19 @@ fn impl_method_prints_timing_with_ms_wording() {
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
 
-    assert!(stdout.contains("Time run: "));
+    assert!(stdout.contains("[exec_time] run took "));
     assert!(stdout.contains(" ms"));
     assert!(!stdout.contains("mills"));
     assert!(stdout.contains("result=42"));
+    assert!(stdout.contains("[exec_time] worker.job took "));
+    assert!(stdout.contains(" us"));
+    assert!(stdout.contains("named-result=7"));
+    assert!(stdout.contains("[exec_time] run_slow_logged took "));
+    assert!(stdout.contains("slow-logged-result=9"));
+    assert!(stdout.contains("fast-suppressed-result=11"));
+    assert!(!stdout.contains("[exec_time] run_fast_suppressed took "));
+    assert!(stdout.contains("warned-result=13"));
+    assert!(stderr.contains("[exec_time][warn] [exec_time] worker.warn took "));
 }
