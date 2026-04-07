@@ -1,8 +1,9 @@
 [package]
 name = "exec_time"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
+rust-version = "1.88"
 description = "Print execution time of a function"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml"]

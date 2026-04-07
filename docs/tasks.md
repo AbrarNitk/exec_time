@@ -34,11 +34,11 @@ Rust observability tooling, and stay simple for small projects.
 
 - [x] Add unit and integration tests for sync functions.
 - [x] Add unit and integration tests for async functions.
-- [ ] Verify behavior with generics, return values, and `where` clauses.
-- [ ] Verify behavior with methods inside `impl` blocks if supported.
-- [ ] Fix output formatting issues such as `mills` wording and inconsistent elapsed formatting.
-- [ ] Review generated code to ensure it preserves function semantics and visibility.
-- [ ] Test compiler compatibility with current stable Rust and document the supported MSRV.
+- [x] Verify behavior with generics, return values, and `where` clauses.
+- [x] Verify behavior with methods inside `impl` blocks if supported.
+- [x] Fix output formatting issues such as `mills` wording and inconsistent elapsed formatting.
+- [x] Review generated code to ensure it preserves function semantics and visibility.
+- [x] Test compiler compatibility with current stable Rust and document the supported MSRV.
 
 ### Phase 2: Improve Output Usability
 

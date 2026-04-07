@@ -58,7 +58,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || async { #block };
                     let r = f().await;
-                    println!("Time {}: {} mills", #print_str, start_time.elapsed().as_millis());
+                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
                     r
                 }
             ))
@@ -69,7 +69,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || { #block };
                     let r = f();
-                    println!("Time {}: {} mills", #print_str, start_time.elapsed().as_millis());
+                    println!("Time {}: {} ms", #print_str, start_time.elapsed().as_millis());
                     r
                 }
             ))
