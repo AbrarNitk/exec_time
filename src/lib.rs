@@ -1,3 +1,58 @@
+//! `exec_time` provides an attribute macro for timing sync and async functions.
+//!
+//! It is intended for lightweight instrumentation during development and debugging.
+//!
+//! # Default
+//!
+//! ```no_run
+//! use exec_time::exec_time;
+//!
+//! #[exec_time]
+//! fn login() {
+//!     std::thread::sleep(std::time::Duration::from_millis(100));
+//! }
+//! ```
+//!
+//! Output:
+//!
+//! ```text
+//! [exec_time] login took 102 ms
+//! ```
+//!
+//! # Common Options
+//!
+//! - `print = "always" | "debug" | "never"`
+//! - `name = "..."`
+//! - `prefix = "..."`, `suffix = "..."`
+//! - `unit = "ns" | "us" | "ms" | "s"`
+//! - `log_over = "500us" | "5ms" | "0.5s"`
+//! - `warn_over = "500us" | "5ms" | "0.5s"`
+//!
+//! `name` overrides the generated function label.
+//! `warn_over` takes precedence over `log_over` when both thresholds match.
+//!
+//! # Thresholds
+//!
+//! ```no_run
+//! use exec_time::exec_time;
+//!
+//! #[exec_time(name = "db.query", warn_over = "250ms")]
+//! fn query_db() {
+//!     std::thread::sleep(std::time::Duration::from_millis(300));
+//! }
+//! ```
+//!
+//! Output:
+//!
+//! ```text
+//! [exec_time][warn] db.query took 300 ms
+//! ```
+//!
+//! # Notes
+//!
+//! - Works with sync and async functions
+//! - Preserves generics, return values, and `where` clauses
+//! - `print = "never"` disables all output
 #[macro_use]
 extern crate quote;
 #[macro_use]
@@ -112,6 +167,25 @@ struct MacroArgs {
     warn_over: Option<DurationThreshold>,
 }
 
+/// Measure the execution time of a function.
+///
+/// Supported attribute arguments:
+///
+/// - `print = "always" | "debug" | "never"`
+/// - `name = "..."`
+/// - `prefix = "..."`, `suffix = "..."`
+/// - `unit = "ns" | "us" | "ms" | "s"`
+/// - `log_over = "500us" | "5ms" | "0.5s"`
+/// - `warn_over = "500us" | "5ms" | "0.5s"`
+///
+/// Example:
+///
+/// ```no_run
+/// use exec_time::exec_time;
+///
+/// #[exec_time(name = "cache.lookup", unit = "us", log_over = "500us")]
+/// fn lookup() {}
+/// ```
 #[proc_macro_attribute]
 pub fn exec_time(
     metadata: proc_macro::TokenStream,
