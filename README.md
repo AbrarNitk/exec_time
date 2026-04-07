@@ -47,7 +47,7 @@ fn query_db() {}
 ```
 
 ```text
-[exec_time][warn] [exec_time] db.query took 312 ms
+[exec_time][warn] db.query took 312 ms
 ```
 
 ## Options
