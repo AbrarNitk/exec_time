@@ -23,6 +23,14 @@ where
     values.remove(0)
 }
 
+#[exec_time(print = "never")]
+fn clone_from_ref<T>(value: &T) -> T
+where
+    T: Clone,
+{
+    value.clone()
+}
+
 struct Accumulator {
     value: i32,
 }
@@ -53,6 +61,11 @@ fn sync_function_accepts_prefix_and_suffix_arguments() {
 #[test]
 fn sync_function_preserves_generics_and_where_clause() {
     assert_eq!(first_owned(vec![42, 7, 9]), 42);
+}
+
+#[test]
+fn sync_function_supports_generic_return_value_with_where_clause() {
+    assert_eq!(clone_from_ref(&String::from("answer")), "answer");
 }
 
 #[test]

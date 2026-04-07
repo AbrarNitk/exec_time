@@ -32,7 +32,7 @@ fn block_on<F: Future>(future: F) -> F::Output {
     }
 }
 
-#[exec_time(print = "always")]
+#[exec_time(print = "never")]
 async fn adds_one_async(value: i32) -> i32 {
     value + 1
 }
@@ -53,6 +53,14 @@ where
     T: Clone,
 {
     values.remove(0)
+}
+
+#[exec_time(print = "never")]
+async fn clone_from_ref_async<T>(value: &T) -> T
+where
+    T: Clone,
+{
+    value.clone()
 }
 
 struct AsyncAccumulator {
@@ -85,6 +93,14 @@ fn async_function_accepts_prefix_and_suffix_arguments() {
 #[test]
 fn async_function_preserves_generics_and_where_clause() {
     assert_eq!(block_on(first_owned_async(vec![42, 7, 9])), 42);
+}
+
+#[test]
+fn async_function_supports_generic_return_value_with_where_clause() {
+    assert_eq!(
+        block_on(clone_from_ref_async(&String::from("answer"))),
+        "answer"
+    );
 }
 
 #[test]
