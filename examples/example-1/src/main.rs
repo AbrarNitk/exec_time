@@ -1,21 +1,13 @@
 use exec_time::exec_time;
 use std::time::Duration;
 
-#[exec_time(
-    name = "example.login",
-    level = "info",
-    unit = "ms"
-)]
+#[exec_time(name = "example.login", level = "info", unit = "ms")]
 async fn login() -> &'static str {
     tokio::time::sleep(Duration::from_millis(25)).await;
     "ok"
 }
 
-#[exec_time(
-    name = "example.query",
-    level = "debug",
-    warn_over = "40ms"
-)]
+#[exec_time(name = "example.query", level = "debug", warn_over = "40ms")]
 async fn query_db() -> usize {
     tokio::time::sleep(Duration::from_millis(50)).await;
     42
