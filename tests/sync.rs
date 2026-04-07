@@ -20,6 +20,11 @@ fn sum_slice_with_name(values: &[i32]) -> i32 {
     values.iter().sum()
 }
 
+#[exec_time(print = "never", log_over = "5ms", warn_over = "10ms")]
+fn sum_slice_with_thresholds(values: &[i32]) -> i32 {
+    values.iter().sum()
+}
+
 #[exec_time(print = "never")]
 fn first_owned<T>(mut values: Vec<T>) -> T
 where
@@ -66,6 +71,11 @@ fn sync_function_accepts_prefix_and_suffix_arguments() {
 #[test]
 fn sync_function_accepts_name_and_unit_arguments() {
     assert_eq!(sum_slice_with_name(&[10, 20, 12]), 42);
+}
+
+#[test]
+fn sync_function_accepts_threshold_arguments() {
+    assert_eq!(sum_slice_with_thresholds(&[10, 20, 12]), 42);
 }
 
 #[test]

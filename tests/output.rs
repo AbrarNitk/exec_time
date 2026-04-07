@@ -26,6 +26,7 @@ fn impl_method_prints_readable_timing_output() {
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
 
     assert!(stdout.contains("[exec_time] run took "));
     assert!(stdout.contains(" ms"));
@@ -34,4 +35,10 @@ fn impl_method_prints_readable_timing_output() {
     assert!(stdout.contains("[exec_time] worker.job took "));
     assert!(stdout.contains(" us"));
     assert!(stdout.contains("named-result=7"));
+    assert!(stdout.contains("[exec_time] run_slow_logged took "));
+    assert!(stdout.contains("slow-logged-result=9"));
+    assert!(stdout.contains("fast-suppressed-result=11"));
+    assert!(!stdout.contains("[exec_time] run_fast_suppressed took "));
+    assert!(stdout.contains("warned-result=13"));
+    assert!(stderr.contains("[exec_time][warn] [exec_time] worker.warn took "));
 }

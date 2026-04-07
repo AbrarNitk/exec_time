@@ -4,6 +4,7 @@ extern crate quote;
 extern crate syn;
 use darling::{Error, FromMeta};
 use proc_macro2::TokenStream as TokenStream2;
+use std::time::Duration;
 
 #[derive(Clone, Copy, Debug, Default)]
 enum TimeUnit {
@@ -26,6 +27,21 @@ impl FromMeta for TimeUnit {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+struct DurationThreshold(u128);
+
+impl DurationThreshold {
+    fn as_nanos(self) -> u128 {
+        self.0
+    }
+}
+
+impl FromMeta for DurationThreshold {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        parse_duration_threshold(value).map(|duration| Self(duration.as_nanos()))
+    }
+}
+
 #[derive(Debug, FromMeta)]
 #[darling(derive_syn_parse)]
 struct MacroArgs {
@@ -39,6 +55,10 @@ struct MacroArgs {
     name: Option<String>,
     #[darling(default)]
     unit: Option<TimeUnit>,
+    #[darling(default)]
+    log_over: Option<DurationThreshold>,
+    #[darling(default)]
+    warn_over: Option<DurationThreshold>,
 }
 
 #[proc_macro_attribute]
@@ -66,7 +86,13 @@ pub fn exec_time(
         let block = input_fn.block;
         let asyncness = input_fn.sig.asyncness;
         let label = build_label(&ident, &args);
-        let print_stmt = print_statement(&label, args.unit.unwrap_or_default());
+
+        let print_stmt = print_statement(
+            &label,
+            args.unit.unwrap_or_default(),
+            args.log_over,
+            args.warn_over,
+        );
 
         if asyncness.is_some() {
             (quote!(
@@ -74,6 +100,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || async { #block };
                     let r = f().await;
+                    let elapsed = start_time.elapsed();
                     #print_stmt
                     r
                 }
@@ -85,6 +112,7 @@ pub fn exec_time(
                     let start_time = std::time::Instant::now();
                     let f = || { #block };
                     let r = f();
+                    let elapsed = start_time.elapsed();
                     #print_stmt
                     r
                 }
@@ -115,19 +143,97 @@ fn build_label(ident: &syn::Ident, args: &MacroArgs) -> String {
     label
 }
 
-fn print_statement(label: &str, unit: TimeUnit) -> TokenStream2 {
+fn print_statement(
+    label: &str,
+    unit: TimeUnit,
+    log_over: Option<DurationThreshold>,
+    warn_over: Option<DurationThreshold>,
+) -> TokenStream2 {
+    let message = format_message(label, unit);
+    let has_thresholds = log_over.is_some() || warn_over.is_some();
+    let log_over = threshold_expression(log_over.map(DurationThreshold::as_nanos));
+    let warn_over = threshold_expression(warn_over.map(DurationThreshold::as_nanos));
+
+    if !has_thresholds {
+        quote! {
+            println!("{}", #message);
+        }
+    } else {
+        quote! {
+            let elapsed_nanos = elapsed.as_nanos();
+            if let Some(threshold) = #warn_over {
+                if elapsed_nanos >= threshold {
+                    eprintln!("[exec_time][warn] {}", #message);
+                } else if let Some(threshold) = #log_over {
+                    if elapsed_nanos >= threshold {
+                        println!("{}", #message);
+                    }
+                }
+            } else if let Some(threshold) = #log_over {
+                if elapsed_nanos >= threshold {
+                    println!("{}", #message);
+                }
+            }
+        }
+    }
+}
+
+fn format_message(label: &str, unit: TimeUnit) -> TokenStream2 {
     match unit {
         TimeUnit::Ns => quote! {
-            println!("[exec_time] {} took {} ns", #label, start_time.elapsed().as_nanos());
+            format!("[exec_time] {} took {} ns", #label, elapsed.as_nanos())
         },
         TimeUnit::Us => quote! {
-            println!("[exec_time] {} took {} us", #label, start_time.elapsed().as_micros());
+            format!("[exec_time] {} took {} us", #label, elapsed.as_micros())
         },
         TimeUnit::Ms => quote! {
-            println!("[exec_time] {} took {} ms", #label, start_time.elapsed().as_millis());
+            format!("[exec_time] {} took {} ms", #label, elapsed.as_millis())
         },
         TimeUnit::S => quote! {
-            println!("[exec_time] {} took {:.3} s", #label, start_time.elapsed().as_secs_f64());
+            format!("[exec_time] {} took {:.3} s", #label, elapsed.as_secs_f64())
         },
     }
+}
+
+fn threshold_expression(value: Option<u128>) -> TokenStream2 {
+    match value {
+        Some(value) => quote! { Some(#value) },
+        None => quote! { None::<u128> },
+    }
+}
+
+fn parse_duration_threshold(value: &str) -> darling::Result<Duration> {
+    let trimmed = value.trim();
+    let units = ["ns", "us", "ms", "s"];
+
+    for unit in units {
+        if let Some(number) = trimmed.strip_suffix(unit) {
+            let amount = number.trim();
+            if amount.is_empty() {
+                return Err(Error::unknown_value(value));
+            }
+
+            return match unit {
+                "ns" => amount
+                    .parse::<u64>()
+                    .map(Duration::from_nanos)
+                    .map_err(|_| Error::unknown_value(value)),
+                "us" => amount
+                    .parse::<u64>()
+                    .map(Duration::from_micros)
+                    .map_err(|_| Error::unknown_value(value)),
+                "ms" => amount
+                    .parse::<u64>()
+                    .map(Duration::from_millis)
+                    .map_err(|_| Error::unknown_value(value)),
+                "s" => amount
+                    .parse::<f64>()
+                    .map(Duration::from_secs_f64)
+                    .map_err(|_| Error::unknown_value(value)),
+                _ => Err(Error::unknown_value(value)),
+            };
+        }
+    }
+
+    Err(Error::unknown_value(value))
 }

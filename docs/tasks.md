@@ -51,10 +51,10 @@ Rust observability tooling, and stay simple for small projects.
 
 ### Phase 3: Reduce Noise
 
-- [ ] Add `warn_over` or `log_over` style thresholds so only slow calls are reported.
+- [x] Add `warn_over` or `log_over` style thresholds so only slow calls are reported.
 - [ ] Add `min_duration` support to suppress very small timings.
 - [ ] Allow developers to choose behavior when below threshold: skip, debug log, or trace log.
-- [ ] Define clear precedence rules when `print`, thresholds, and backend settings are combined.
+- [x] Define clear precedence rules when `print`, thresholds, and backend settings are combined.
 
 
 ### Phase 4: Support Real Logging Backends

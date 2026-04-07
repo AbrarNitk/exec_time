@@ -41,8 +41,13 @@ fn main() {
 - `print = "never"`: disable printing.
 - `name = "..."`: override the default function-based label. Takes precedence over `prefix` and `suffix`.
 - `unit = "ns" | "us" | "ms" | "s"`: choose the reported time unit. Default: `ms`.
+- `log_over = "..."`: print only when execution time is at least the given threshold.
+- `warn_over = "..."`: emit a warning to `stderr` only when execution time is at least the given threshold.
 - `prefix = "..."`: prepend a label before the function name.
 - `suffix = "..."`: append a label after the function name.
+
+Threshold values currently support `ns`, `us`, `ms`, and `s`, for example `log_over = "5ms"` or `warn_over = "0.5s"`.
+If both `log_over` and `warn_over` are set, `warn_over` takes precedence when both thresholds match.
 
 ## Custom Label
 
@@ -57,4 +62,16 @@ fn login() {
 
 ```text
 [exec_time] user.login took 102345 us
+```
+
+## Slow Call Reporting
+
+```rust
+use exec_time::exec_time;
+
+#[exec_time(log_over = "50ms")]
+fn query_cache() {}
+
+#[exec_time(name = "db.query", warn_over = "250ms")]
+fn query_db() {}
 ```
