@@ -4,11 +4,14 @@ version = "0.1.5"
 authors = ["AbrarNitk <abrar.nitk@gmail.com>"]
 edition = "2018"
 rust-version = "1.88"
-description = "Print execution time of a function"
+description = "Attribute macro for timing sync and async Rust functions with labels, units, and slow-call thresholds"
 license = "MIT"
-include = ["src/**/*", "Cargo.toml"]
+homepage = "https://github.com/AbrarNitk/exec_time"
+documentation = "https://docs.rs/exec_time"
+include = ["src/**/*", "README.md", "LICENSE", "Cargo.toml"]
 readme = "README.md"
-keywords = ["execution_time", "print_time", "measure_time", "time"]
+categories = ["development-tools::debugging", "development-tools::procedural-macro-helpers"]
+keywords = ["timing", "profiling", "proc-macro", "logging", "tracing"]
 repository = "https://github.com/AbrarNitk/exec_time"
 
 
