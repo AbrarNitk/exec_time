@@ -15,6 +15,15 @@ exec_time = "0.1.6"
 
 MSRV: Rust `1.88`.
 
+For the tracing backend:
+
+```toml
+[dependencies]
+exec_time = { version = "0.1.6", features = ["tracing"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
+```
+
 ## Default
 
 ```rust
@@ -50,11 +59,39 @@ fn query_db() {}
 [exec_time][warn] db.query took 312 ms
 ```
 
+## Tracing
+
+```rust
+use exec_time::exec_time;
+
+#[exec_time(backend = "tracing", name = "db.query", level = "info", warn_over = "250ms")]
+fn query_db() {}
+```
+
+With a `tracing` subscriber installed, this emits structured tracing events instead of writing to `stdout`.
+
+Runnable example: [examples/example-1/src/main.rs](/home/ak/github/abrarnitk/exec_time/examples/example-1/src/main.rs)
+
+```bash
+cargo run --manifest-path examples/example-1/Cargo.toml --offline
+```
+
+Example output:
+
+```text
+INFO example.login took 26 ms label="example.login" elapsed_ns=26306096 elapsed_unit="ms" elapsed_value=26
+login=ok
+WARN example.query took 50 ms label="example.query" elapsed_ns=50656683 elapsed_unit="ms" elapsed_value=50
+rows=42
+```
+
 ## Options
 
 - `print = "always" | "debug" | "never"`: controls whether timing is emitted. Default: `always`.
 - `name = "..."`: replaces the generated label.
 - `prefix = "..."`, `suffix = "..."`: build the label as `<prefix>::<function>::<suffix>`. Ignored when `name` is set.
+- `backend = "stdout" | "tracing"`: output backend. Default: `stdout`.
+- `level = "trace" | "debug" | "info" | "warn" | "error"`: tracing event level. Default: `info`.
 - `unit = "ns" | "us" | "ms" | "s"`: output unit. Default: `ms`.
 - `log_over = "..."`: print only when execution time meets or exceeds the threshold.
 - `warn_over = "..."`: write a warning to `stderr` only when execution time meets or exceeds the threshold.
@@ -64,5 +101,7 @@ Threshold values support `ns`, `us`, `ms`, and `s`, for example `500us`, `5ms`, 
 ## Rules
 
 - Default output format: `[exec_time] <label> took <value> <unit>`
+- `backend = "tracing"` requires the `tracing` feature on `exec_time` and a direct `tracing` dependency in the consuming crate
+- `backend = "tracing"` also needs a subscriber such as `tracing-subscriber` to render events
 - `warn_over` takes precedence over `log_over` when both thresholds match
 - `print = "never"` disables all output

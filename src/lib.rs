@@ -7,6 +7,46 @@ use proc_macro2::TokenStream as TokenStream2;
 use std::time::Duration;
 
 #[derive(Clone, Copy, Debug, Default)]
+enum OutputBackend {
+    #[default]
+    Stdout,
+    Tracing,
+}
+
+impl FromMeta for OutputBackend {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        match value {
+            "stdout" => Ok(Self::Stdout),
+            "tracing" => Ok(Self::Tracing),
+            _ => Err(Error::unknown_value(value)),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+enum EventLevel {
+    Trace,
+    Debug,
+    #[default]
+    Info,
+    Warn,
+    Error,
+}
+
+impl FromMeta for EventLevel {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        match value {
+            "trace" => Ok(Self::Trace),
+            "debug" => Ok(Self::Debug),
+            "info" => Ok(Self::Info),
+            "warn" => Ok(Self::Warn),
+            "error" => Ok(Self::Error),
+            _ => Err(Error::unknown_value(value)),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 enum TimeUnit {
     Ns,
     Us,
@@ -54,6 +94,10 @@ struct MacroArgs {
     #[darling(default)]
     name: Option<String>,
     #[darling(default)]
+    backend: Option<OutputBackend>,
+    #[darling(default)]
+    level: Option<EventLevel>,
+    #[darling(default)]
     unit: Option<TimeUnit>,
     #[darling(default)]
     log_over: Option<DurationThreshold>,
@@ -87,8 +131,10 @@ pub fn exec_time(
         let asyncness = input_fn.sig.asyncness;
         let label = build_label(&ident, &args);
 
-        let print_stmt = print_statement(
+        let emit_stmt = emit_statement(
             &label,
+            args.backend.unwrap_or_default(),
+            args.level.unwrap_or_default(),
             args.unit.unwrap_or_default(),
             args.log_over,
             args.warn_over,
@@ -101,7 +147,7 @@ pub fn exec_time(
                     let f = || async { #block };
                     let r = f().await;
                     let elapsed = start_time.elapsed();
-                    #print_stmt
+                    #emit_stmt
                     r
                 }
             ))
@@ -113,7 +159,7 @@ pub fn exec_time(
                     let f = || { #block };
                     let r = f();
                     let elapsed = start_time.elapsed();
-                    #print_stmt
+                    #emit_stmt
                     r
                 }
             ))
@@ -143,55 +189,134 @@ fn build_label(ident: &syn::Ident, args: &MacroArgs) -> String {
     label
 }
 
-fn print_statement(
+fn emit_statement(
     label: &str,
+    backend: OutputBackend,
+    level: EventLevel,
     unit: TimeUnit,
     log_over: Option<DurationThreshold>,
     warn_over: Option<DurationThreshold>,
 ) -> TokenStream2 {
-    let message = format_message(label, unit);
+    let normal_emit = backend_emit_statement(label, backend, level, unit, false);
+    let warn_emit = backend_emit_statement(label, backend, EventLevel::Warn, unit, true);
     let has_thresholds = log_over.is_some() || warn_over.is_some();
     let log_over = threshold_expression(log_over.map(DurationThreshold::as_nanos));
     let warn_over = threshold_expression(warn_over.map(DurationThreshold::as_nanos));
 
     if !has_thresholds {
         quote! {
-            println!("{}", #message);
+            #normal_emit
         }
     } else {
         quote! {
             let elapsed_nanos = elapsed.as_nanos();
             if let Some(threshold) = #warn_over {
                 if elapsed_nanos >= threshold {
-                    eprintln!("[exec_time][warn] {}", #message);
+                    #warn_emit
                 } else if let Some(threshold) = #log_over {
                     if elapsed_nanos >= threshold {
-                        println!("{}", #message);
+                        #normal_emit
                     }
                 }
             } else if let Some(threshold) = #log_over {
                 if elapsed_nanos >= threshold {
-                    println!("{}", #message);
+                    #normal_emit
                 }
             }
         }
     }
 }
 
-fn format_message(label: &str, unit: TimeUnit) -> TokenStream2 {
+fn backend_emit_statement(
+    label: &str,
+    backend: OutputBackend,
+    level: EventLevel,
+    unit: TimeUnit,
+    warn: bool,
+) -> TokenStream2 {
+    match backend {
+        OutputBackend::Stdout => stdout_emit_statement(label, unit, warn),
+        OutputBackend::Tracing => tracing_emit_statement(label, level, unit),
+    }
+}
+
+fn stdout_emit_statement(label: &str, unit: TimeUnit, warn: bool) -> TokenStream2 {
+    let body = format_message_body(label, unit);
+
+    if warn {
+        quote! {
+            eprintln!("[exec_time][warn] {}", #body);
+        }
+    } else {
+        quote! {
+            println!("[exec_time] {}", #body);
+        }
+    }
+}
+
+#[cfg(feature = "tracing")]
+fn tracing_emit_statement(label: &str, level: EventLevel, unit: TimeUnit) -> TokenStream2 {
+    let body = format_message_body(label, unit);
+    let level = tracing_level_tokens(level);
+    let elapsed_value = elapsed_value_expression(unit);
+    let elapsed_unit = unit.as_str();
+
+    quote! {
+        ::tracing::event!(
+            target: "exec_time",
+            #level,
+            label = #label,
+            elapsed_ns = elapsed.as_nanos(),
+            elapsed_unit = #elapsed_unit,
+            elapsed_value = #elapsed_value,
+            "{}",
+            #body
+        );
+    }
+}
+
+#[cfg(not(feature = "tracing"))]
+fn tracing_emit_statement(_label: &str, _level: EventLevel, _unit: TimeUnit) -> TokenStream2 {
+    quote! {
+        compile_error!("`backend = \"tracing\"` requires the `tracing` feature on `exec_time` and a direct `tracing` dependency in the consuming crate.");
+    }
+}
+
+fn format_message_body(label: &str, unit: TimeUnit) -> TokenStream2 {
     match unit {
         TimeUnit::Ns => quote! {
-            format!("[exec_time] {} took {} ns", #label, elapsed.as_nanos())
+            format!("{} took {} ns", #label, elapsed.as_nanos())
         },
         TimeUnit::Us => quote! {
-            format!("[exec_time] {} took {} us", #label, elapsed.as_micros())
+            format!("{} took {} us", #label, elapsed.as_micros())
         },
         TimeUnit::Ms => quote! {
-            format!("[exec_time] {} took {} ms", #label, elapsed.as_millis())
+            format!("{} took {} ms", #label, elapsed.as_millis())
         },
         TimeUnit::S => quote! {
-            format!("[exec_time] {} took {:.3} s", #label, elapsed.as_secs_f64())
+            format!("{} took {:.3} s", #label, elapsed.as_secs_f64())
         },
+    }
+}
+
+#[cfg(feature = "tracing")]
+fn tracing_level_tokens(level: EventLevel) -> TokenStream2 {
+    match level {
+        EventLevel::Trace => quote! { ::tracing::Level::TRACE },
+        EventLevel::Debug => quote! { ::tracing::Level::DEBUG },
+        EventLevel::Info => quote! { ::tracing::Level::INFO },
+        EventLevel::Warn => quote! { ::tracing::Level::WARN },
+        EventLevel::Error => quote! { ::tracing::Level::ERROR },
+    }
+}
+
+#[cfg(feature = "tracing")]
+fn elapsed_value_expression(unit: TimeUnit) -> TokenStream2 {
+    match unit {
+        TimeUnit::Ns => quote! { elapsed.as_nanos() },
+        TimeUnit::Us => quote! { elapsed.as_micros() },
+        TimeUnit::Ms => quote! { elapsed.as_millis() },
+        TimeUnit::S => quote! { elapsed.as_secs_f64() },
     }
 }
 
@@ -236,4 +361,16 @@ fn parse_duration_threshold(value: &str) -> darling::Result<Duration> {
     }
 
     Err(Error::unknown_value(value))
+}
+
+#[cfg(feature = "tracing")]
+impl TimeUnit {
+    fn as_str(self) -> &'static str {
+        match self {
+            TimeUnit::Ns => "ns",
+            TimeUnit::Us => "us",
+            TimeUnit::Ms => "ms",
+            TimeUnit::S => "s",
+        }
+    }
 }

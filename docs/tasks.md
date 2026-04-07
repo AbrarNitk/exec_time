@@ -59,11 +59,11 @@ Rust observability tooling, and stay simple for small projects.
 
 ### Phase 4: Support Real Logging Backends
 
-- [ ] Add optional `tracing` integration behind a feature flag.
+- [x] Add optional `tracing` integration behind a feature flag.
 - [ ] Add optional `log` integration behind a feature flag.
-- [ ] Keep `stdout` as the default fallback for simple projects.
-- [ ] Emit structured fields when using `tracing` or `log` backends.
-- [ ] Let users configure log level, such as `trace`, `debug`, `info`, `warn`, or `error`.
+- [x] Keep `stdout` as the default fallback for simple projects.
+- [x] Emit structured fields for supported backends, starting with `tracing`.
+- [x] Let users configure tracing event level, such as `trace`, `debug`, `info`, `warn`, or `error`.
 
 ### Phase 5: Add Metrics Support
 

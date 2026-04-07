@@ -40,5 +40,5 @@ fn impl_method_prints_readable_timing_output() {
     assert!(stdout.contains("fast-suppressed-result=11"));
     assert!(!stdout.contains("[exec_time] run_fast_suppressed took "));
     assert!(stdout.contains("warned-result=13"));
-    assert!(stderr.contains("[exec_time][warn] [exec_time] worker.warn took "));
+    assert!(stderr.contains("[exec_time][warn] worker.warn took "));
 }

@@ -14,6 +14,9 @@ categories = ["development-tools::debugging", "development-tools::procedural-mac
 keywords = ["timing", "profiling", "proc-macro", "logging", "tracing"]
 repository = "https://github.com/AbrarNitk/exec_time"
 
+[features]
+default = []
+tracing = []
 
 [lib]
 proc-macro = true
@@ -24,3 +27,7 @@ quote = "1.0"
 proc-macro2 = "1.0"
 darling = "0.23"
 syn = "2.0"
+
+[dev-dependencies]
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", default-features = false, features = ["fmt", "std"] }
