@@ -10,7 +10,7 @@ Attribute macro for printing sync and async function execution time.
 
 ```toml
 [dependencies]
-exec_time = "0.1.6"
+exec_time = "0.1.7"
 ```
 
 MSRV: Rust `1.88`.
